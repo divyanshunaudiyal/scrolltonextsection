@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Smooth Scrolling to next Section</title>
+    <style>
+      body,
+      html {
+        margin: 0;
+        overflow: hidden;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      section {
+        width: 100vw;
+        height: 100vh;
+      }
+      .section2 {
+        width: 200vw;
+        display: flex;
+        transition: transform 1.3s ease-in-out;
+      }
+      div {
+        width: 50%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="section1" style="background: #ed2c2c"></section>
+    <section class="section2" style="background: #0bbf0b">
+      <div>1</div>
+      <div>2</div>
+    </section>
+    <section class="section3" style="background: #1c1cd7"></section>
+    <section class="section4" style="background: #ddddf8"></section>
+    <section class="section5" style="background: #ecf274"></section>
+    <script>
+      //
+      const sections = document.querySelectorAll("section"),
+        numberOfSections = sections.length;
+
+      console.log(sections);
+      let direction = 1,
+        currentSection;
+
+      // if (window.scrollY == 0) {
+      //   currentSection = 1;
+      // } else if (window.scrollY == sections[0].clientHeight) {
+      //   currentSection = 2;
+      // } else if (window.scrollY == sections[0].clientHeight * 2) {
+      //   currentSection = 4;
+      // } else if (window.scrollY == sections[0].clientHeight * 3) {
+      //   currentSection = 5;
+      // } else if (window.scrollY == sections[0].clientHeight * 4) {
+      //   currentSection = 6;
+      // } else {
+      //   window.scrollTo(0, 0);
+      //   currentSection = 1;
+      // }
+
+      // if (currentSection > 3)
+      // sections[1].style.transform = "translateX( -50% )";
+
+      console.log(currentSection);
+
+      function smoothScroll(duration) {
+        direction > 0 ? currentSection++ : currentSection--;
+
+        currentSection == 0 ? (currentSection = 1) : null;
+        currentSection == numberOfSections + 2
+          ? (currentSection = numberOfSections + 1)
+          : null;
+
+        //console.log( currentSection )
+
+        //console.log( test + (direction * sections[ 0 ].clientHeight)  )
+
+        let vh = sections[0].clientHeight;
+        let startPosition = window.pageYOffset;
+        let distance = direction * vh;
+        let startTime = null;
+        if (currentSection == 3 && direction == 1) {
+          // sections[1].style.transform = "translateX( -50% )";
+        } else if (currentSection == 2 && direction == -1) {
+          // sections[1].style.transform = "translateX( 0 )";
+        } else {
+          requestAnimationFrame(animation);
+        }
+
+        function animation(currentTime) {
+          if (startTime === null) startTime = currentTime;
+          let timeElapsed = currentTime - startTime;
+          let run = ease(timeElapsed, startPosition, distance, duration);
+          window.scrollTo(0, run);
+          if (timeElapsed < duration) requestAnimationFrame(animation);
+        }
+        function ease(t, b, c, d) {
+          t /= d / 2;
+          if (t < 1) return (c / 2) * t * t * t * t + b;
+          t -= 2;
+          return (-c / 2) * (t * t * t * t - 2) + b;
+        }
+      }
+      document.addEventListener("wheel", throttle(scrollChange, 1500));
+      document.addEventListener("touchstart", mobibeSmoothScroll);
+      function scrollChange(e) {
+        if (e.deltaY > 0) {
+          direction = 1;
+        } else {
+          direction = -1;
+        }
+        smoothScroll(1300);
+      }
+      function throttle(func, limit) {
+        let inThrottle;
+        return function () {
+          const args = arguments,
+            context = this;
+          if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => (inThrottle = false), limit);
+          }
+        };
+      }
+      sections.forEach((section) => {
+        window.addEventListener("resize", () => {
+          section.style.width = `100vw`;
+          section.style.height = `100vh`;
+        });
+      });
+
+      let flag = true,
+        startY,
+        endY;
+      function mobibeSmoothScroll(e) {
+        startY = e.touches[0].pageY - sections[currentSection - 1].offsetTop;
+
+        sections[currentSection - 1].addEventListener("touchend", (e) => {
+          endY =
+            e.changedTouches[0].pageY - sections[currentSection - 1].offsetTop;
+          startY < endY ? (direction = -1) : (direction = 1);
+
+          if (flag) {
+            smoothScroll(1300);
+            flag = false;
+            setTimeout(() => (flag = true), 1500);
+          }
+        });
+      }
+
+      sections.forEach((section) => {
+        window.addEventListener("resize", () => {
+          window.scrollTo(0, window.innerHeight * (currentSection - 2));
+          sections[1].style.width = "200vw";
+        });
+      });
+    </script>
+  </body>
+</html>
